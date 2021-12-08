@@ -61,6 +61,7 @@ if uploaded_file is not None:
                             'Sepia / Vintage',
                             'Vignette Effect',
                             'Pencil Sketch',
+                            'Edge Detection'
                          ))
 
     # Colorspace of output image.
@@ -82,6 +83,17 @@ if uploaded_file is not None:
         ksize = st.slider('Blur kernel size', 1, 11, 5, step=2)
         output = pencil_sketch(output, ksize)
         color = 'GRAY'
+    elif option == 'Edge Detection':
+        mode = st.selectbox('Edge detection mode:', ('None', 'Sobel', 'Sobel X', 'Sobel Y', 'Canny'))
+        if mode == 'Sobel' or mode == 'Sobel X' or mode == 'Sobel Y':
+            ksize = st.slider('Kernel size', 3, 11, 3, step=2)
+            dx = 1 if mode == 'Sobel X' or mode == 'Sobel' else 0
+            dy = 1 if mode == 'Sobel Y' or mode == 'Sobel' else 0
+            output = sobel_edge_detection(output, ksize, dx, dy)
+        elif mode == 'Canny':
+            threshold1 = st.slider('Lower threshold', 0, 255, 180)
+            threshold2 = st.slider('Upper threshold', threshold1, 255, threshold1 + 20)
+            output = canny_edge_detection(output, threshold1, threshold2)
 
     if st.checkbox('Repair image'):
         stroke_width = st.slider("Stroke width: ", 1, 25, 5)

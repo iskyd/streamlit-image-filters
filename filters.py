@@ -100,3 +100,18 @@ def sharp(img, level='None'):
     img = cv2.filter2D(img, ddepth=-1, kernel=kernel)
 
     return img
+
+@st.cache
+def canny_edge_detection(img, threshold1, threshold2):
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = blur(img_gray, ksize=7)
+    res = cv2.Canny(blurred, threshold1=threshold1, threshold2=threshold2)
+
+    return cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
+
+@st.cache
+def sobel_edge_detection(img, ksize=3, dx=1, dy=1):
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    res = cv2.Sobel(src=img_gray, ddepth=-1, dx=dx, dy=dy, ksize=ksize)
+
+    return cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
