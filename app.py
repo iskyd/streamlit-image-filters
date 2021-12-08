@@ -2,6 +2,7 @@ import io
 import base64
 import cv2
 from PIL import Image
+from streamlit_drawable_canvas import st_canvas
 from filters import *
 
 # Generating a link to download a particular image file.
@@ -22,6 +23,8 @@ if uploaded_file is not None:
     # Convert the file to an opencv image.
     raw_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     img = cv2.imdecode(raw_bytes, cv2.IMREAD_COLOR)
+    h, w = img.shape[:2]
+
     input_col, output_col = st.columns(2)
     with input_col:
         st.header('Original')
@@ -79,6 +82,35 @@ if uploaded_file is not None:
         ksize = st.slider('Blur kernel size', 1, 11, 5, step=2)
         output = pencil_sketch(output, ksize)
         color = 'GRAY'
+
+    if st.checkbox('Repair image'):
+        stroke_width = st.slider("Stroke width: ", 1, 25, 5)
+        repair_col1, repair_col2 = st.columns(2)
+
+        with repair_col1:
+            canvas_result = st_canvas(
+                fill_color='white',
+                stroke_width=stroke_width,
+                stroke_color='black',
+                background_image=Image.open(uploaded_file).resize((h, w)),
+                update_streamlit=True,
+                height=h,
+                width=w,
+                drawing_mode='freedraw',
+                key="canvas",
+            )
+        with repair_col2:
+            stroke = canvas_result.image_data
+            if stroke is not None:
+                mask = cv2.split(stroke)[3]
+                mask = np.uint8(mask)
+                mask = cv2.resize(mask, (w, h))
+
+                repair_option = st.selectbox('Mode:', ( 'None', 'Telea', 'NS'))
+                if repair_option == 'Telea':
+                    output = cv2.inpaint(src=img, inpaintMask=mask, inpaintRadius=3, flags=cv2.INPAINT_TELEA)[:,:,::-1]
+                elif repair_option == 'NS':
+                    output = cv2.inpaint(src=img, inpaintMask=mask, inpaintRadius=3, flags=cv2.INPAINT_NS)[:,:,::-1]
 
     with output_col:
         st.header('Output')
